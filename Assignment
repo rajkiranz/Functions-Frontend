@@ -1,0 +1,61 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.9;
+
+contract Tasks {
+    address payable public owner;
+    uint256 public balance;
+
+    event Deposit(uint256 amount);
+    event Withdraw(uint256 amount);
+
+    constructor(uint initBalance) payable {
+        owner = payable(msg.sender);
+        balance = initBalance;
+    }
+
+    function getBalance() public view returns (uint256) {
+        return balance;
+    }
+
+    function deposit(uint256 _amount) public payable {
+        uint256 _previousBalance = balance;
+
+        // Ensure only the owner can deposit
+        require(msg.sender == owner, "You are not the owner of this account");
+
+        // Perform the deposit transaction
+        balance += _amount;
+
+        // Verify the transaction completed successfully
+        assert(balance == _previousBalance + _amount);
+
+        // Emit the deposit event
+        emit Deposit(_amount);
+    }
+
+    // Custom error for insufficient balance
+    error InsufficientBalance(uint256 balance, uint256 withdrawAmount);
+
+    function withdraw(uint256 _withdrawAmount) public {
+        require(msg.sender == owner, "You are not the owner of this account");
+
+        uint256 _previousBalance = balance;
+
+        // Check if the balance is sufficient for the withdrawal
+        if (balance < _withdrawAmount) {
+            revert InsufficientBalance({
+                balance: balance,
+                withdrawAmount: _withdrawAmount
+            });
+        }
+
+        // Perform the withdrawal transaction
+        balance -= _withdrawAmount;
+
+        // Verify the balance is correct after withdrawal
+        assert(balance == (_previousBalance - _withdrawAmount));
+
+        // Emit the withdrawal event
+        emit Withdraw(_withdrawAmount);
+    }
+}
